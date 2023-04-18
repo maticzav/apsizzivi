@@ -3,15 +3,11 @@ import java.util.Scanner;
 class SquareMatrix {
 
 	private int[][] m;
-
 	public int n;
 
 	public SquareMatrix(int n) {
-
 		this.n = n;
-
 		m = new int[n][n];
-
 	}
 
 	// Set value at row i, column j.
@@ -40,13 +36,11 @@ class SquareMatrix {
 	// Write a given matrix as a submatrix of this matrix, starting at row
 	// `startRow` and column `startCol`.
 	public void putSubmatrix(int startRow, int startCol, SquareMatrix b) {
-
 		for (int i = 0; i < b.n; i++) {
 			for (int j = 0; j < b.n; j++) {
 				this.setValue(startRow + i, startCol + j, b.getValue(i, j));
 			}
 		}
-
 	}
 
 	// Add two matrices using standard matrix addition.
