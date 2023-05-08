@@ -73,7 +73,7 @@ class Network {
 					node.augmEdge.currentFlow -= flow;
 					node = this.nodes[node.augmEdge.endNodeID];
 
-					System.out.print("-  ");
+					System.out.print("- ");
 				} else {
 					// We are on a positive edge.
 					node.augmEdge.currentFlow += flow;
