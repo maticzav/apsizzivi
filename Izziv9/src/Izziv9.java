@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class Izziv9 {
@@ -68,6 +69,8 @@ class Network {
 					break;
 				}
 
+				// NOTE: We set augmenting edge from the perspective of the "previous" node
+				// (i.e. positive edges end with the current node).
 				if (node.id == node.augmEdge.startNodeID) {
 					// We are on a negative edge.
 					node.augmEdge.currentFlow -= flow;
@@ -98,68 +101,68 @@ class Network {
 	private boolean findUnsaturatedPath() {
 		this.resetMarks();
 
-		Node source = this.nodes[0];
+		// NOTE: We perform BFS to find the path to the sink. Because we need to choose
+		// the node with the lowest ID as the starting point, we need to use priority
+		// queue. Additionally, we know that every node that has been added to the queue
+		// is reachable.
+		PriorityQueue<Integer> queue = new PriorityQueue<Integer>();
+		queue.add(0);
 
-		Node temp = source;
+		while (!queue.isEmpty()) {
+			Node temp = this.nodes[queue.poll()];
 
-		while (temp != null) {
+			// NOTE: We need to check if the node has been marked because we don't check
+			// if the node has already been added to the queue when iterating over the
+			// edges.
+			if (temp.marked) {
+				continue;
+			}
 
-			temp.visited = true;
+			temp.marked = true;
 
 			// Positive edges.
 			for (Edge e : temp.outEdges) {
-				if (e.endNodeID == 0) {
-					// We don't want to go back to the source.
-					continue;
-				}
-
 				Node endNode = this.nodes[e.endNodeID];
 
-				// NOTE: We use `incFlow` to figure out whether the node has been marked.
-				if (e.currentFlow < e.capacity && endNode.incFlow == -1) {
+				// NOTE: We need this to conform to the solution; otherwise, it's possible
+				// that we wouldn't choose the node with the lowest ID as the next one.
+				boolean hasNotBeenVisited = endNode.incFlow == -1;
+
+				if (e.currentFlow < e.capacity && !endNode.marked && hasNotBeenVisited) {
 					// We found an unsaturated and unmarked edge.
 					endNode.augmEdge = e;
 					endNode.incFlow = infmin(e.capacity - e.currentFlow, temp.incFlow);
+
+					queue.add(e.endNodeID);
 				}
 			}
 
 			// Negative edges.
 			for (Edge e : temp.inEdges) {
-				if (e.startNodeID == 0) {
-					// We don't want to go back to the source.
-					continue;
-				}
-
 				Node startNode = this.nodes[e.startNodeID];
 
-				if (e.currentFlow > 0 && startNode.incFlow == -1) {
+				// NOTE: We need this to conform to the solution; otherwise, it's possible
+				// that we wouldn't choose the node with the lowest ID as the next one.
+				boolean hasNotBeenVisited = startNode.incFlow == -1;
+
+				if (e.currentFlow > 0 && !startNode.marked && hasNotBeenVisited) {
 					// We found an unsaturated and unmarked edge.
 
 					startNode.augmEdge = e;
 					startNode.incFlow = infmin(e.currentFlow, temp.incFlow);
+
+					queue.add(e.startNodeID);
 				}
 			}
 
 			// Check if we reached the target.
-			if (this.nodes[this.nodes.length - 1].incFlow != -1) {
+			if (this.nodes[this.nodes.length - 1].incFlow >= 0) {
 				return true;
 			}
-
-			temp = this.findMarkedUnvisited();
 		}
 
 		// We didn't find a path.
 		return false;
-	}
-
-	private Node findMarkedUnvisited() {
-		// NOTE: We can use the incFlow to determine whether the node has been marked.
-		for (int i = 0; i < nodes.length; i++) {
-			if (nodes[i].incFlow >= 0 && !nodes[i].visited) {
-				return nodes[i];
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -167,7 +170,7 @@ class Network {
 	 */
 	public void resetMarks() {
 		for (Node node : this.nodes) {
-			node.visited = false;
+			node.marked = false;
 			node.augmEdge = null;
 			node.incFlow = -1;
 		}
@@ -188,7 +191,7 @@ class Network {
 class Node {
 	int id;
 
-	boolean visited;
+	boolean marked;
 
 	// NOTE: We can use the augmentation edge to determine whether the edge
 	// is positive or negative - edges don't change their direction after
@@ -202,7 +205,7 @@ class Node {
 	ArrayList<Edge> outEdges;
 
 	public Node(int id) {
-		this.visited = false;
+		this.marked = false;
 		this.augmEdge = null;
 		this.incFlow = -1;
 
