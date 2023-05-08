@@ -9,6 +9,11 @@ public class Izziv8 {
 
 		int n = sc.nextInt();
 
+		// NOTE: n tells the number of coefficients meaning that the degree of the
+		// polynomial is n - 1. We need k + 1 point values to determine a polynomial of
+		// degree k. Since the product of polynomials of power a and b has power a + b,
+		// we need 2 * (n - 1 + 1) = 2 * n point values to determine the product of two
+		// polynomials of degree n - 1.
 		int d = 1;
 		while (d < 2 * n) {
 			d *= 2;
