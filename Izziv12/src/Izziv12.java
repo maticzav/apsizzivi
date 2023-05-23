@@ -51,18 +51,20 @@ class Graph {
 
 		this.nodes[startNodeId].distance = 0;
 
-		for (int h = 0; h < this.nodes.length; h++) {
+		for (int h = 0; h < this.nodes.length - 1; h++) {
 			for (Edge e : this.edges) {
 				Node startNode = this.nodes[e.startNodeId];
 				Node endNode = this.nodes[e.endNodeId];
 
 				// Skip edges that are not reachable yet (Inf + n = Inf).
-				if (startNode.distance == -1) {
+				// Skip edges that have already been updated in this cycle.
+				if (startNode.distance == -1 || startNode.lastUpdatedH == h) {
 					continue;
 				}
 
 				// Relax the edge if the distance can be improved.
 				if (endNode.distance == -1 || startNode.distance + e.cost < endNode.distance) {
+					endNode.lastUpdatedH = h;
 					endNode.distance = startNode.distance + e.cost;
 				}
 			}
@@ -93,6 +95,7 @@ class Graph {
 	private void reset() {
 		for (Node n : this.nodes) {
 			n.distance = -1;
+			n.lastUpdatedH = -1;
 		}
 	}
 }
@@ -106,12 +109,16 @@ class Node {
 	/// NOTE: -1 means infinity.
 	int distance;
 
+	/// Tracks the index of the last h for which the distance was updated.
+	int lastUpdatedH;
+
 	public Node(int id) {
 		this.id = id;
 		this.inEdges = new LinkedList<Edge>();
 		this.outEdges = new LinkedList<Edge>();
 
 		this.distance = -1;
+		this.lastUpdatedH = -1;
 	}
 }
 
